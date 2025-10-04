@@ -54,7 +54,8 @@ async def catalog(event: Message | CallbackQuery):
         await event.answer(text='Выберите катигорию:', reply_markup=await kb.catigories())
     else:
         await event.answer(text='Вы вернулись')
-        await event.message.edit_text(text='Выберите катигорию:',
+        await event.message.delete()
+        await event.message.answer(text='Выберите катигорию:',
                                      reply_markup=await kb.catigories())
 
 
@@ -62,7 +63,7 @@ async def catalog(event: Message | CallbackQuery):
 async def cards(callback: CallbackQuery):
     await callback.answer()
     cat_id = callback.data.split('_')[1]
-    await callback.message.edit_text('Выберите товар', reply_markup=kb.cards(cat_id))
+    await callback.message.edit_text('Выберите товар', reply_markup= await kb.cards(cat_id))
 
 
 @client.callback_query(F.data.startswith('card_'))
@@ -72,8 +73,8 @@ async def cards_info(callback: CallbackQuery):
     card = await get_card(card_id)
     await callback.message.delete()
     await callback.message.answer_photo(photo=card.image,
-                             caption=f'{card.name}\n\n{card.description}\n\n{card.prise} RUB',
-                             reply_markup=kb.back_to_cats(card.category_id, card.id))
+                             caption=f'{card.name}\n\n{card.description}\n\n{card.price} RUB',
+                             reply_markup= await kb.back(card.category_id, card.id))
 
 
 @client.message(F.photo)

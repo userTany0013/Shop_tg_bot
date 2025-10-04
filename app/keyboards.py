@@ -44,7 +44,7 @@ async def cards(category):
     keyboard = InlineKeyboardBuilder()
     all_cards = await get_cards(category)
     for card in all_cards:
-        keyboard.row(InlineKeyboardButton(text=f'{card.name} | {card.prise} RUB',
+        keyboard.row(InlineKeyboardButton(text=f'{card.name} | {card.price} RUB',
                                            callback_data=f'card_{card.id}'))
     keyboard.row(InlineKeyboardButton(text='Назад', callback_data='categories'))
     return keyboard.as_markup()
