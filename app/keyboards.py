@@ -31,6 +31,16 @@ input_field_placeholder='Введите номер'
 )
 
 
+async def client_iocation():
+    return ReplyKeyboardMarkup(keyboard=[
+    [KeyboardButton(text='Поделиться локацией', request_location=True)]
+],
+resize_keyboard=True,
+input_field_placeholder='Введите адрес'
+)
+
+
+
 async def catigories():
     keyboard = InlineKeyboardBuilder()
     all_catigories = await get_category()

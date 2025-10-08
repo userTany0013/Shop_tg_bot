@@ -4,10 +4,17 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 
 import app.keyboards as kb
-from app.database.requests import set_user, update_user, get_card
+from app.database.requests import set_user, update_user, get_card, get_user
+
+import ssl
+import certifi
+from geopy.geocoders import Nominatim
 
 
 client = Router()
+
+stx = ssl.create_default_context(cafile=certifi.where())
+geolocator = Nominatim(user_agent='TGbot_for_shop', ssl_context=stx)
 
 
 @client.message(CommandStart())
@@ -75,6 +82,42 @@ async def cards_info(callback: CallbackQuery):
     await callback.message.answer_photo(photo=card.image,
                              caption=f'{card.name}\n\n{card.description}\n\n{card.price} RUB',
                              reply_markup= await kb.back(card.category_id, card.id))
+
+
+@client.callback_query(F.data.startswith('buy_'))
+async def cards_info(callback: CallbackQuery, state: FSMContext):
+    card_id = callback.data.split('_')[1]
+    await callback.answer()
+    await state.set_state('address')
+    await state.update_data(card_id=card_id)
+    await callback.message.answer('Введите адрес', reply_markup=await kb.client_iocation())
+
+
+@client.message(F.location, StateFilter('address'))
+async def location(message: Message, state: FSMContext):
+    data = await state.get_data()
+    address = geolocator.reverse(f'{message.location.latitude}, {message.location.longitude}',
+                                  exactly_one=True, language='ru', addressdetails=True)
+    user = await get_user(message.from_user.id)
+    card_id = data.get('card_id')
+    full_info = (f'{user.name}\n{message.from_user.username}\n{user.tg_id}\n{user.phone_number}\n{address}\n{card_id}')
+#    full_info = (f'{message.location.latitude}', f'{message.location.longitude}')
+    await message.bot.send_message(-1002980866420, full_info)
+    await message.answer('Заказ принят', reply_markup=kb.menu)
+    await state.clear()
+
+
+@client.message(StateFilter('address'))
+async def location(message: Message, state: FSMContext):
+    data = await state.get_data()
+    address = message.text
+    user = await get_user(message.from_user.id)
+    card_id = data.get('card_id')
+    full_info = f'{user.name}\n{message.from_user.username}\n{user.tg_id}\n{user.phone_number}\n{address}\n{card_id}'
+    await message.bot.send_message(-1002980866420, text=full_info)
+    await message.answer('Заказ принят', reply_markup=kb.menu)
+    await state.clear()
+
 
 
 @client.message(F.photo)

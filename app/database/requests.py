@@ -20,6 +20,11 @@ async def update_user(tg_id, name, phone):
             )
         await session.commit()
 
+    
+async def get_user(tg_id):
+        async with async_session() as session:
+            return await session.scalar(select(User).where(User.tg_id==tg_id))
+
 
 async def get_category():
     async with async_session() as session:
