@@ -66,3 +66,29 @@ async def back(cat_id, card_id):
         [InlineKeyboardButton(text='Назад', callback_data='categories')]
     ])
 
+
+async def address(card_id):
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text='да', callback_data='yes')],
+        [InlineKeyboardButton(text='нет, ввести вручную', callback_data=f'buy_{card_id}')]
+    ])
+
+
+admin_menu = ReplyKeyboardMarkup(keyboard=[
+    [KeyboardButton(text='Добавить товар'),
+     KeyboardButton(text='Изменить товар')],
+    [KeyboardButton(text='Данные о товаре'),
+     KeyboardButton(text='Данные о клиенте')]
+],
+resize_keyboard=True,
+input_field_placeholder='Выберите пункт меню')
+
+
+async def category_for_card():
+    keyboard = InlineKeyboardBuilder()
+    all_catigories = await get_category()
+    for categoru in all_catigories:
+        keyboard.add(InlineKeyboardButton(text=categoru.name,
+                                           callback_data=f'category_{categoru.id}'))
+    return keyboard.adjust(2).as_markup()
+

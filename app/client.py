@@ -17,7 +17,7 @@ stx = ssl.create_default_context(cafile=certifi.where())
 geolocator = Nominatim(user_agent='TGbot_for_shop', ssl_context=stx)
 
 
-@client.message(CommandStart())
+@client.message(F.chat.id != -1002980866420, CommandStart())
 async def start_bot(message: Message, state: FSMContext):
     is_user = await set_user(message.from_user.id)
     if not is_user:
@@ -28,7 +28,7 @@ async def start_bot(message: Message, state: FSMContext):
         await message.answer('Welcome in Bot!', reply_markup=kb.menu)
 
 
-@client.message(StateFilter('reg_name'))
+@client.message(F.chat.id != -1002980866420, StateFilter('reg_name'))
 async def get_reg_name(message: Message, state: FSMContext):
     await state.update_data(name=message.text.capitalize())
     await state.set_state('reg_phone')
@@ -36,7 +36,7 @@ async def get_reg_name(message: Message, state: FSMContext):
                          reply_markup= await kb.client_phone())
     
 
-@client.message(F.contact, StateFilter('reg_phone'))
+@client.message(F.chat.id != -1002980866420, F.contact, StateFilter('reg_phone'))
 async def get_reg_phone(message: Message, state: FSMContext):
     await state.update_data(phone=message.contact.phone_number)
     data = await state.get_data()
@@ -45,7 +45,7 @@ async def get_reg_phone(message: Message, state: FSMContext):
     await state.clear()
 
 
-@client.message(StateFilter('reg_phone'))
+@client.message(F.chat.id != -1002980866420, StateFilter('reg_phone'))
 async def get_reg_phone_text(message: Message, state: FSMContext):
     await state.update_data(phone=message.text)
     data = await state.get_data()
@@ -55,7 +55,7 @@ async def get_reg_phone_text(message: Message, state: FSMContext):
 
 
 @client.callback_query(F.data == 'categories')
-@client.message(F.text == 'Каталог')
+@client.message(F.chat.id != -1002980866420, F.text == 'Каталог')
 async def catalog(event: Message | CallbackQuery):
     if isinstance(event, Message):
         await event.answer(text='Выберите катигорию:', reply_markup=await kb.catigories())
@@ -93,21 +93,32 @@ async def cards_info(callback: CallbackQuery, state: FSMContext):
     await callback.message.answer('Введите адрес', reply_markup=await kb.client_iocation())
 
 
-@client.message(F.location, StateFilter('address'))
+@client.message(F.chat.id != -1002980866420, F.location, StateFilter('address'))
 async def location(message: Message, state: FSMContext):
-    data = await state.get_data()
-    address = geolocator.reverse(f'{message.location.latitude}, {message.location.longitude}',
-                                  exactly_one=True, language='ru', addressdetails=True)
+    username = message.from_user.username
     user = await get_user(message.from_user.id)
-    card_id = data.get('card_id')
-    full_info = (f'{user.name}\n{message.from_user.username}\n{user.tg_id}\n{user.phone_number}\n{address}\n{card_id}')
-#    full_info = (f'{message.location.latitude}', f'{message.location.longitude}')
-    await message.bot.send_message(-1002980866420, full_info)
-    await message.answer('Заказ принят', reply_markup=kb.menu)
+    await state.update_data(user=user, username=username)
+    data = await state.get_data()
+    try:
+        address = geolocator.reverse(f'{message.location.latitude}, {message.location.longitude}',
+                                    exactly_one=True, language='ru', addressdetails=True)
+        await state.update_data(address=address)
+        card_id = data.get('card_id')
+        await message.answer(f'Адрес верный?:\n{address}', reply_markup= await kb.address(card_id))
+    except:
+        await message.answer('Данные не отправленыб попробуйте еще раз', reply_markup=await kb.client_iocation())
+
+
+@client.callback_query(F.data == 'yes')
+async def sending(callback: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    full_info = (f'{data['user'].name}\n{data['username']}\n{data['user'].tg_id}\n{data['user'].phone_number}\n{data['address']}\n{data['card_id']}')
+    await callback.message.bot.send_message(-1002980866420, full_info)
+    await callback.message.answer('Заказ принят', reply_markup=kb.menu)
     await state.clear()
 
 
-@client.message(StateFilter('address'))
+@client.message(F.chat.id != -1002980866420, StateFilter('address'))
 async def location(message: Message, state: FSMContext):
     data = await state.get_data()
     address = message.text
@@ -117,9 +128,3 @@ async def location(message: Message, state: FSMContext):
     await message.bot.send_message(-1002980866420, text=full_info)
     await message.answer('Заказ принят', reply_markup=kb.menu)
     await state.clear()
-
-
-
-@client.message(F.photo)
-async def photo_id(message: Message):
-    await message.answer(message.photo[-1].file_id)

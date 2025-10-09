@@ -39,3 +39,14 @@ async def get_cards(category):
 async def get_card(card_id):
     async with async_session() as session:
         return await session.scalar(select(Card).where(Card.id == card_id))
+    
+
+async def set_card(data):
+    async with async_session() as session:
+        new_card = await session.add(Card(name=data.get('name'),
+                                 description=data.get('description'),
+                                 price=data.get('price'),
+                                 image=data.get('image'),
+                                 category_id=data.get('category_id')))
+        await session.commit()
+        return new_card
