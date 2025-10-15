@@ -75,7 +75,7 @@ async def address(card_id):
 
 
 admin_menu = ReplyKeyboardMarkup(keyboard=[
-    [KeyboardButton(text='Добавить товар'),
+    [KeyboardButton(text='добавить товар'),
      KeyboardButton(text='Изменить товар')],
     [KeyboardButton(text='Данные о товаре'),
      KeyboardButton(text='Данные о клиенте')]
@@ -89,6 +89,13 @@ async def category_for_card():
     all_catigories = await get_category()
     for categoru in all_catigories:
         keyboard.add(InlineKeyboardButton(text=categoru.name,
-                                           callback_data=f'category_{categoru.id}'))
+                                           callback_data=f'tocardcategory_{categoru.id}'))
     return keyboard.adjust(2).as_markup()
 
+
+async def confirm():
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text='да', callback_data='data_yes')],
+        [InlineKeyboardButton(text='нет, ввести заново', callback_data='no')],
+        [InlineKeyboardButton(text='нет, вернуться в меню', callback_data='back')]
+    ])

@@ -118,7 +118,7 @@ async def sending(callback: CallbackQuery, state: FSMContext):
     await state.clear()
 
 
-@client.message(F.chat.id != -1002980866420, StateFilter('address'))
+@client.message(StateFilter('address'))
 async def location(message: Message, state: FSMContext):
     data = await state.get_data()
     address = message.text
