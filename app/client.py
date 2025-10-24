@@ -3,8 +3,8 @@ from aiogram.filters import CommandStart, StateFilter
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 
-import app.keyboards as kb
-from app.database.requests import set_user, update_user, get_card, get_user
+import app.keyboards.client as kb
+from app.database.requests.client import set_user, update_user, get_card, get_user
 
 import ssl
 import certifi
